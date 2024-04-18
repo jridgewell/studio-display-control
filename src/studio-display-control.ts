@@ -18,16 +18,8 @@ const SD_REPORT_ID = 0x01;
 const SD_PRODUCT_ID = 0x1114;
 const SD_VENDOR_ID = 0x05ac;
 
-let display: Device | null = null;
 function getDisplay() {
-  if (display) return display;
-
-  const dev = findByIds(SD_VENDOR_ID, SD_PRODUCT_ID);
-  if (!dev) return null;
-
-  dev.open();
-  dev.interface(SD_BRIGHTNESS_INTERFACE).claim();
-  return (display = dev);
+  return findByIds(SD_VENDOR_ID, SD_PRODUCT_ID);
 }
 
 export function hasDisplay() {
@@ -38,20 +30,7 @@ export async function getBrightness() {
   const display = getDisplay();
   if (!display) throw new Error(`can't connect to studio display`);
 
-  const data: Buffer = await new Promise((resolve, reject) => {
-    display.controlTransfer(
-      makeRequestType(DIRECTION_IN),
-      HID_GET_REPORT,
-      HID_REPORT_TYPE_FEATURE | SD_REPORT_ID,
-      SD_BRIGHTNESS_INTERFACE,
-      7,
-      (err, data) => {
-        if (err) return reject(err);
-        resolve(data as Buffer);
-      },
-    );
-  });
-
+  const data = await controlTransfer(display, DIRECTION_IN, HID_GET_REPORT, 7);
   return nitsToPercent(data.readUInt16LE(1));
 }
 
@@ -61,16 +40,28 @@ export async function setBrightness(percent: number) {
   const display = getDisplay();
   if (!display) throw new Error(`can't connect to studio display`);
 
-  await new Promise((resolve, reject) => {
+  const data = makeRequestData(percentToNits(percent));
+  await controlTransfer(display, DIRECTION_OUT, HID_SET_REPORT, data);
+}
+
+function controlTransfer<D extends number | Buffer>(
+  display: Device,
+  dir: typeof DIRECTION_IN | typeof DIRECTION_OUT,
+  report: typeof HID_GET_REPORT | typeof HID_SET_REPORT,
+  data: D,
+): Promise<D extends number ? Buffer : number> {
+  return new Promise((resolve, reject) => {
+    display.open();
+    display.interface(SD_BRIGHTNESS_INTERFACE).claim();
     display.controlTransfer(
-      makeRequestType(DIRECTION_OUT),
-      HID_SET_REPORT,
+      makeRequestType(dir),
+      report,
       HID_REPORT_TYPE_FEATURE | SD_REPORT_ID,
       SD_BRIGHTNESS_INTERFACE,
-      makeRequestData(percentToNits(percent)),
+      data,
       (err, data) => {
         if (err) return reject(err);
-        resolve(data as number);
+        resolve(data as any);
       },
     );
   });
