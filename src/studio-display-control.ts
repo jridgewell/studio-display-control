@@ -64,14 +64,13 @@ export async function setBrightness(percent: number) {
   await new Promise((resolve, reject) => {
     display.controlTransfer(
       makeRequestType(DIRECTION_OUT),
-      HID_GET_REPORT,
+      HID_SET_REPORT,
       HID_REPORT_TYPE_FEATURE | SD_REPORT_ID,
       SD_BRIGHTNESS_INTERFACE,
       makeRequestData(percentToNits(percent)),
       (err, data) => {
-        console.log(data);
         if (err) return reject(err);
-        resolve(data as Buffer);
+        resolve(data as number);
       },
     );
   });
@@ -84,7 +83,7 @@ function makeRequestType(dir: typeof DIRECTION_IN | typeof DIRECTION_OUT) {
 function makeRequestData(nits: number) {
   const bytes = Buffer.alloc(7);
   bytes[0] = 0x01;
-  bytes.writeUInt16LE(nits);
+  bytes.writeUInt16LE(nits, 1);
   return bytes;
 }
 
