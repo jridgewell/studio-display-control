@@ -1,6 +1,6 @@
 {
   "name": "studio-display-control",
-  "version": "1.4.15",
+  "version": "0.0.1",
   "description": "Set the brightness of an Apple Studio Display in Node.js.",
   "main": "dist/studio-display-control.umd.js",
   "module": "dist/studio-display-control.mjs",
