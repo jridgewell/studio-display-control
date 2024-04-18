@@ -2,7 +2,7 @@
   "name": "studio-display-control",
   "version": "0.0.1",
   "description": "Set the brightness of an Apple Studio Display in Node.js.",
-  "main": "dist/studio-display-control.umd.js",
+  "main": "dist/studio-display-control.cjs",
   "module": "dist/studio-display-control.mjs",
   "types": "dist/types/studio-display-control.d.ts",
   "files": [
@@ -12,11 +12,11 @@
     ".": [
       {
         "types": "./dist/types/studio-display-control.d.ts",
-        "browser": "./dist/studio-display-control.umd.js",
-        "require": "./dist/studio-display-control.umd.js",
+        "browser": "./dist/studio-display-control.cjs",
+        "require": "./dist/studio-display-control.cjs",
         "import": "./dist/studio-display-control.mjs"
       },
-      "./dist/studio-display-control.umd.js"
+      "./dist/studio-display-control.cjs"
     ],
     "./package.json": "./package.json"
   },
@@ -46,7 +46,7 @@
     "type": "git",
     "url": "git+https://github.com/jridgewell/studio-display-control.git"
   },
-  "author": "Rich Harris",
+  "author": "Justin Ridgewell",
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-typescript": "8.3.0",
