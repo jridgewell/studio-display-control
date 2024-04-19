@@ -54,7 +54,9 @@ class Display {
   }
 
   async getBrightness() {
-    const response = await this._guard(() => controlTransfer(this._device, Direction.In, Report.Get, 7));
+    const response = await this._guard(() =>
+      controlTransfer(this._device, Direction.In, Report.Get, 7),
+    );
     return nitsToPercent(response.readUInt16LE(1));
   }
 
@@ -73,9 +75,7 @@ class Display {
     });
   }
 
-  private async _guard<R>(
-    fn: () => R,
-  ): Promise<R> {
+  private async _guard<R>(fn: () => R): Promise<R> {
     try {
       this._enter();
       return await fn();
