@@ -1,17 +1,25 @@
-import { type Device, findByIds } from 'usb';
+import { Device, findByIds, Interface } from 'usb';
+import { promisify } from 'util';
 
 const BRIGHTNESS_MIN = 400.0;
 const BRIGHTNESS_MAX = 60000.0;
 const BRIGHTNESS_RANGE = BRIGHTNESS_MAX - BRIGHTNESS_MIN;
 
 const HID_REPORT_TYPE_FEATURE = 0x0300;
-const HID_GET_REPORT = 0x01;
-const HID_SET_REPORT = 0x09;
-
-const DIRECTION_IN = 1 << 7;
-const DIRECTION_OUT = 0 << 7;
-const TYPE_CLASS = 1 << 5;
-const RECIPIENT_INTERFACE = 1;
+const enum Report {
+  Get = 0x01,
+  Set = 0x09,
+}
+const enum Direction {
+  In = 1 << 7,
+  Out = 0 << 7,
+}
+const enum Type {
+  Class = 1 << 5,
+}
+const enum Recipient {
+  Interface = 1,
+}
 
 const SD_BRIGHTNESS_INTERFACE = 0x7;
 const SD_REPORT_ID = 0x01;
@@ -30,7 +38,7 @@ export async function getBrightness() {
   const display = getDisplay();
   if (!display) throw new Error(`can't connect to studio display`);
 
-  const data = await controlTransfer(display, DIRECTION_IN, HID_GET_REPORT, 7);
+  const data = await controlTransfer(display, Direction.In, Report.Get, 7);
   return nitsToPercent(data.readUInt16LE(1));
 }
 
@@ -41,34 +49,48 @@ export async function setBrightness(percent: number) {
   if (!display) throw new Error(`can't connect to studio display`);
 
   const data = makeRequestData(percentToNits(percent));
-  await controlTransfer(display, DIRECTION_OUT, HID_SET_REPORT, data);
+  await controlTransfer(display, Direction.Out, Report.Set, data);
 }
 
-function controlTransfer<D extends number | Buffer>(
+const ifaceRelease = promisify(Interface.prototype.release);
+const devControlTransfer = promisify(Device.prototype.controlTransfer);
+async function controlTransfer<D extends number | Buffer>(
   display: Device,
-  dir: typeof DIRECTION_IN | typeof DIRECTION_OUT,
-  report: typeof HID_GET_REPORT | typeof HID_SET_REPORT,
+  dir: Direction,
+  report: Report,
   data: D,
 ): Promise<D extends number ? Buffer : number> {
-  return new Promise((resolve, reject) => {
+  const dispose: Array<() => void | Promise<void>> = [];
+  try {
     display.open();
-    display.interface(SD_BRIGHTNESS_INTERFACE).claim();
-    display.controlTransfer(
+    dispose.unshift(() => display.close());
+
+    const iface = display.interface(SD_BRIGHTNESS_INTERFACE);
+    iface.claim();
+    dispose.unshift(() => ifaceRelease.call(iface));
+
+    const out = await devControlTransfer.call(
+      display,
       makeRequestType(dir),
       report,
       HID_REPORT_TYPE_FEATURE | SD_REPORT_ID,
       SD_BRIGHTNESS_INTERFACE,
       data,
-      (err, data) => {
-        if (err) return reject(err);
-        resolve(data as any);
-      },
     );
-  });
+    return out as any;
+  } finally {
+    for (const d of dispose) {
+      try {
+        await d();
+      } catch (e) {
+        console.error('additional error', e);
+      }
+    }
+  }
 }
 
-function makeRequestType(dir: typeof DIRECTION_IN | typeof DIRECTION_OUT) {
-  return dir | TYPE_CLASS | RECIPIENT_INTERFACE;
+function makeRequestType(dir: Direction) {
+  return dir | Type.Class | Recipient.Interface;
 }
 
 function makeRequestData(nits: number) {
