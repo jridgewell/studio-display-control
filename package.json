@@ -30,7 +30,7 @@
     "lint": "run-s -n lint:*",
     "lint:prettier": "npm run test:lint:prettier -- --write",
     "lint:ts": "npm run test:lint:ts -- --fix",
-    "prebuild": "rm -rf dist",
+    "prebuild": "rimraf dist",
     "prepublishOnly": "npm run preversion",
     "preversion": "run-s test build",
     "test": "run-s -n test:lint test:only",
@@ -61,6 +61,7 @@
     "mocha": "9.2.0",
     "npm-run-all": "4.1.5",
     "prettier": "2.5.1",
+    "rimraf": "^5.0.5",
     "rollup": "2.64.0",
     "tsx": "4.7.1",
     "typescript": "4.5.4"
