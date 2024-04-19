@@ -6,7 +6,8 @@
   "module": "dist/studio-display-control.mjs",
   "types": "dist/types/studio-display-control.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "bin"
   ],
   "exports": {
     ".": [
@@ -37,13 +38,10 @@
     "prepublishOnly": "npm run preversion",
     "preversion": "run-s test build",
     "test": "run-s -n test:lint test:only",
-    "test:debug": "mocha --inspect-brk",
     "test:lint": "run-s -n test:lint:*",
-    "test:lint:prettier": "prettier --check '{src,test}/**/*.ts'",
-    "test:lint:ts": "eslint '{src,test}/**/*.ts'",
-    "test:only": "mocha",
-    "test:coverage": "c8 mocha",
-    "test:watch": "mocha --watch"
+    "test:lint:prettier": "prettier --check 'src/**/*.ts'",
+    "test:lint:ts": "eslint 'src/**/*.ts'",
+    "test:only": ""
   },
   "repository": {
     "type": "git",
@@ -53,20 +51,16 @@
   "license": "MIT",
   "devDependencies": {
     "@rollup/plugin-typescript": "8.3.0",
-    "@types/mocha": "10.0.6",
     "@types/node": "17.0.15",
     "@typescript-eslint/eslint-plugin": "5.10.0",
     "@typescript-eslint/parser": "5.10.0",
     "benchmark": "2.1.4",
-    "c8": "7.11.2",
     "eslint": "8.7.0",
     "eslint-config-prettier": "8.3.0",
-    "mocha": "9.2.0",
     "npm-run-all": "4.1.5",
     "prettier": "2.5.1",
     "rimraf": "^5.0.5",
     "rollup": "2.64.0",
-    "tsx": "4.7.1",
     "typescript": "4.5.4"
   },
   "dependencies": {
