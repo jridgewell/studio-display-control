@@ -1,5 +1,5 @@
 import { Device, findByIds, Interface } from 'usb';
-import { promisify } from 'util';
+import { promisify } from 'node:util';
 
 const BRIGHTNESS_MIN = 400.0;
 const BRIGHTNESS_MAX = 60000.0;

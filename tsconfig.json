@@ -14,5 +14,5 @@
     "typeRoots": ["node_modules/@types"]
   },
   "exclude": ["dist"],
-  "include": ["src", "test"]
+  "include": ["src", "test", "bin/sdctl.js"]
 }

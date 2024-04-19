@@ -20,6 +20,9 @@
     ],
     "./package.json": "./package.json"
   },
+  "bin": {
+    "sdctl": "./bin/sdctl.js"
+  },
   "scripts": {
     "benchmark": "run-s build:rollup benchmark:*",
     "benchmark:install": "cd benchmark && npm install",
