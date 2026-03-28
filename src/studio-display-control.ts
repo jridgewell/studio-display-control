@@ -23,8 +23,11 @@ const enum Recipient {
 
 const SD_BRIGHTNESS_INTERFACE = 0x7;
 const SD_REPORT_ID = 0x01;
-const SD_PRODUCT_ID = 0x1114;
 const SD_VENDOR_ID = 0x05ac;
+const SUPPORTED_PRODUCT_NAMES: Record<number, string> = {
+  0x1114: 'Apple Studio Display',
+  0x1116: 'Apple Studio Display XDR',
+};
 
 const ifaceRelease = promisify(Interface.prototype.release);
 const devControlTransfer = promisify(Device.prototype.controlTransfer);
@@ -35,8 +38,8 @@ export function getDisplays() {
   const displays: Display[] = [];
   for (const dev of devices) {
     const desc = dev.deviceDescriptor;
-    if (desc.idVendor === SD_VENDOR_ID && desc.idProduct === SD_PRODUCT_ID) {
-      displays.push(new Display(dev));
+    if (desc.idVendor === SD_VENDOR_ID && isSupportedProductId(desc.idProduct)) {
+      displays.push(new Display(dev, desc.idProduct));
     }
   }
 
@@ -45,12 +48,14 @@ export function getDisplays() {
 
 class Display {
   private _device: Device;
+  private _productId: number;
   private _queue = 0;
   private _open: null | Device = null;
   private _claimed: null | Interface = null;
 
-  constructor(dev: Device) {
+  constructor(dev: Device, productId: number) {
     this._device = dev;
+    this._productId = productId;
   }
 
   async getBrightness() {
@@ -73,6 +78,14 @@ class Display {
       const desc = display.deviceDescriptor;
       return devGetStringDesc.call(display, desc.iSerialNumber);
     });
+  }
+
+  getProductId() {
+    return this._productId;
+  }
+
+  getModelName() {
+    return getDisplayModelName(this._productId);
   }
 
   private async _guard<R>(fn: () => R): Promise<R> {
@@ -138,6 +151,14 @@ function controlTransfer<D extends number | Buffer>(
 
 function makeRequestType(dir: Direction) {
   return dir | Type.Class | Recipient.Interface;
+}
+
+function isSupportedProductId(productId: number) {
+  return Object.prototype.hasOwnProperty.call(SUPPORTED_PRODUCT_NAMES, productId);
+}
+
+function getDisplayModelName(productId: number) {
+  return SUPPORTED_PRODUCT_NAMES[productId] ?? 'Apple Studio Display';
 }
 
 function makeRequestData(nits: number) {
